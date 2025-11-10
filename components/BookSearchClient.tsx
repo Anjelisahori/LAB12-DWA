@@ -41,7 +41,7 @@ const initialParams = {
 export default function BookSearchClient({ authors, genres }: { authors: AuthorSelect[], genres: string[] }) {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true) // ⬅️ CAMBIADO: Iniciamos en true
   const [results, setResults] = useState<SearchResults>({ 
     data: [], 
     pagination: { 
@@ -64,7 +64,7 @@ export default function BookSearchClient({ authors, genres }: { authors: AuthorS
     order: searchParams.get('order') || initialParams.order,
   })
 
-  // Función de búsqueda, con dependencia VACÍA para estabilidad.
+  // Función de búsqueda
   const fetchBooks = useCallback(async (params: typeof filters) => {
     setLoading(true)
     const query = new URLSearchParams(params as any).toString()
@@ -76,7 +76,6 @@ export default function BookSearchClient({ authors, genres }: { authors: AuthorS
         setResults(data)
       } else {
         console.error("Error al cargar la búsqueda:", res.status)
-        // Usamos la función de actualización de estado para evitar depender del objeto `results` actual.
         setResults(prev => ({ data: [], pagination: { ...prev.pagination, total: 0, totalPages: 0 } }))
       }
     } catch (error) {
@@ -84,28 +83,36 @@ export default function BookSearchClient({ authors, genres }: { authors: AuthorS
     } finally {
       setLoading(false)
     }
-  }, []) // <--- ¡CORRECCIÓN: ARRAY DE DEPENDENCIAS VACÍO!
+  }, [])
   
-  // Efecto para sincronizar la URL y realizar la búsqueda (solo se ejecuta cuando `filters` cambia)
+  // ⬅️ CORRECCIÓN PRINCIPAL: Efecto para cargar datos iniciales al montar
+  useEffect(() => {
+    fetchBooks(filters)
+  }, []) // Solo se ejecuta al montar el componente
+  
+  // Efecto para sincronizar URL cuando cambian los filtros
   useEffect(() => {
     const query = new URLSearchParams(filters as any).toString()
     router.push(`/books?${query}`, { scroll: false })
-    fetchBooks(filters)
-  }, [filters, fetchBooks, router])
+  }, [filters, router])
 
-  // Handlers (Mantenidos)
+  // Handlers
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
-    setFilters(prev => ({ 
-      ...prev, 
+    const newFilters = { 
+      ...filters, 
       [name]: value, 
       page: 1 
-    }))
+    }
+    setFilters(newFilters)
+    fetchBooks(newFilters) // ⬅️ Llamar fetchBooks cuando cambian los filtros
   }
 
   const handlePageChange = (newPage: number) => {
     if (newPage > 0 && newPage <= results.pagination.totalPages) {
-      setFilters(prev => ({ ...prev, page: newPage }))
+      const newFilters = { ...filters, page: newPage }
+      setFilters(newFilters)
+      fetchBooks(newFilters)
     }
   }
   
@@ -128,11 +135,22 @@ export default function BookSearchClient({ authors, genres }: { authors: AuthorS
 
   return (
     <>
-      <header className="mb-8 flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-900">Catálogo de Libros y Búsqueda Avanzada</h1>
-        <Link href="/books/create" className="flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 transition">
-            <FaPlus className="mr-2" /> Crear Libro
-        </Link>
+      <header className="mb-8 bg-white rounded-2xl shadow-lg p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+              <FaSearch className="text-indigo-600" />
+              Catálogo de Libros
+            </h1>
+            <p className="text-gray-600 mt-1">Explora y gestiona la colección completa</p>
+          </div>
+          <Link 
+            href="/books/create" 
+            className="flex items-center px-5 py-3 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 transition-all duration-200 hover:scale-105"
+          >
+            <FaPlus className="mr-2" /> Agregar Libro
+          </Link>
+        </div>
       </header>
 
       {/* --- Zona de Filtros y Búsqueda --- */}
