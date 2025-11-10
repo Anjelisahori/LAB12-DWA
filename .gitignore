@@ -1,0 +1,47 @@
+# =========================
+# ARCHIVOS Y DIRECTORIOS DE DEPENDENCIAS
+# =========================
+node_modules/
+vendor/
+
+# =========================
+# ARCHIVOS DE COMPILACIÓN Y TEMPORALES
+# =========================
+/dist/
+/build/
+.next/
+out/            # Exportaciones estáticas de Next.js
+*.log
+*.tmp
+*.bak
+
+# =========================
+# ARCHIVOS DEL SISTEMA OPERATIVO
+# =========================
+.DS_Store       # macOS
+Thumbs.db       # Windows
+
+# =========================
+# CONFIGURACIONES SENSIBLES (NO SUBIR)
+# =========================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+config.local.js
+
+# =========================
+# OTRAS CONFIGURACIONES / EDITORES
+# =========================
+.vscode/
+.idea/
+*.swp
+
+# =========================
+# VARIOS
+# =========================
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
